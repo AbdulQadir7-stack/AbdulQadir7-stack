@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0f7fa, #f5f5f5);
+    }
+
+    .calculator {
+      width: 320px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      padding: 20px;
+    }
+
+    .display {
+      width: 100%;
+      height: 80px;
+      background: #f7f7f7;
+      border: none;
+      border-radius: 12px;
+      text-align: right;
+      font-size: 2rem;
+      padding: 20px;
+      margin-bottom: 20px;
+      color: #222;
+      overflow: hidden;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 18px 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      background: #eaeaea;
+      color: #222;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.96);
+    }
+
+    .operator {
+      background: #ffb84d;
+      color: white;
+    }
+
+    .equals {
+      background: #4caf50;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .clear {
+      background: #f44336;
+      color: white;
+    }
+
+    .delete {
+      background: #607d8b;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div id="display" class="display">0</div>
+
+    <div class="buttons">
+      <button class="clear" data-action="clear">C</button>
+      <button class="delete" data-action="delete">DEL</button>
+      <button class="operator" data-value="/">÷</button>
+      <button class="operator" data-value="*">×</button>
+
+      <button data-value="7">7</button>
+      <button data-value="8">8</button>
+      <button data-value="9">9</button>
+      <button class="operator" data-value="-">−</button>
+
+      <button data-value="4">4</button>
+      <button data-value="5">5</button>
+      <button data-value="6">6</button>
+      <button class="operator" data-value="+">+</button>
+
+      <button data-value="1">1</button>
+      <button data-value="2">2</button>
+      <button data-value="3">3</button>
+      <button class="equals" data-action="equals">=</button>
+
+      <button data-value="0" style="grid-column: span 2;">0</button>
+      <button data-value=".">.</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById("display");
+    let expression = "";
+
+    function updateDisplay() {
+      display.textContent = expression || "0";
+    }
+
+    function appendValue(value) {
+      if (value === "." && expression.split(/[+\-*/]/).pop().includes(".")) {
+        return;
+      }
+
+      if (value === "." && expression === "") {
+        expression = "0.";
+      } else {
+        expression += value;
+      }
+
+      updateDisplay();
+    }
+
+    function appendOperator(operator) {
+      if (!expression) return;
+
+      const lastChar = expression.slice(-1);
+      if (["+", "-", "*", "/"].includes(lastChar)) {
+        expression = expression.slice(0, -1) + operator;
+      } else {
+        expression += operator;
+      }
+
+      updateDisplay();
+    }
+
+    function clearExpression() {
+      expression = "";
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      expression = expression.slice(0, -1);
+      updateDisplay();
+    }
+
+    function evaluateExpression() {
+      if (!expression) return;
+
+      try {
+        const safeExpression = expression.replace(/×/g, "*").replace(/÷/g, "/");
+        const result = Function(`"use strict"; return (${safeExpression})`)();
+
+        if (!Number.isFinite(result)) {
+          throw new Error("Invalid calculation");
+        }
+
+        expression = result.toString();
+        updateDisplay();
+      } catch {
+        expression = "Error";
+        updateDisplay();
+        setTimeout(() => {
+          expression = "";
+          updateDisplay();
+        }, 1000);
+      }
+    }
+
+    document.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = button.dataset.value;
+        const action = button.dataset.action;
+
+        if (value !== undefined) {
+          if (["+", "-", "*", "/"].includes(value)) {
+            appendOperator(value);
+          } else {
+            appendValue(value);
+          }
+        } else if (action === "clear") {
+          clearExpression();
+        } else if (action === "delete") {
+          deleteLast();
+        } else if (action === "equals") {
+          evaluateExpression();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
